@@ -13,13 +13,14 @@ import {
   ModalFooter,
 } from "reactstrap";
 
+// Datos actualizados con nombres coherentes
 const data = [
-  { id: 1, personaje: "Naruto", anime: "Naruto" },
-  { id: 2, personaje: "Goku", anime: "Dragon Ball" },
-  { id: 3, personaje: "Kenshin Himura", anime: "Rurouni Kenshin" },
-  { id: 4, personaje: "Monkey D. Luffy", anime: "One Piece" },
-  { id: 5, personaje: "Edward Elric", anime: "Fullmetal Alchemist: Brotherhood"},
-  { id: 6, personaje: "Seto Kaiba", anime: "Yu-Gi-Oh!" },
+  { id: 1, recolector: "Naruto", finca: "El Sapote" },
+  { id: 2, recolector: "Goku", finca: "Progreso" },
+  { id: 3, recolector: "Kenet", finca: "Peten" },
+  { id: 4, recolector: "juan", finca: "Quiche" },
+  { id: 5, recolector: "Mario", finca: "Jutiapa"},
+  { id: 6, recolector: "KEvin", finca: "Santa Rosa" },
 ];
 
 class App extends React.Component {
@@ -29,8 +30,8 @@ class App extends React.Component {
     modalInsertar: false,
     form: {
       id: "",
-      personaje: "",
-      anime: "",
+      recolector: "",
+      finca: "",
     },
   };
 
@@ -60,8 +61,8 @@ class App extends React.Component {
     var arreglo = this.state.data;
     arreglo.map((registro) => {
       if (dato.id == registro.id) {
-        arreglo[contador].personaje = dato.personaje;
-        arreglo[contador].anime = dato.anime;
+        arreglo[contador].recolector = dato.recolector;
+        arreglo[contador].finca = dato.finca;
       }
       contador++;
     });
@@ -113,8 +114,8 @@ class App extends React.Component {
             <thead>
               <tr>
                 <th>ID</th>
-                <th>Personaje</th>
-                <th>Anime</th>
+                <th>Recolector</th>
+                <th>Finca</th>
                 <th>Acción</th>
               </tr>
             </thead>
@@ -123,8 +124,8 @@ class App extends React.Component {
               {this.state.data.map((dato) => (
                 <tr key={dato.id}>
                   <td>{dato.id}</td>
-                  <td>{dato.personaje}</td>
-                  <td>{dato.anime}</td>
+                  <td>{dato.recolector}</td>
+                  <td>{dato.finca}</td>
                   <td>
                     <Button
                       color="primary"
@@ -161,27 +162,27 @@ class App extends React.Component {
             
             <FormGroup>
               <label>
-                Personaje: 
+                Recolector: 
               </label>
               <input
                 className="form-control"
-                name="personaje"
+                name="recolector"
                 type="text"
                 onChange={this.handleChange}
-                value={this.state.form.personaje}
+                value={this.state.form.recolector}
               />
             </FormGroup>
             
             <FormGroup>
               <label>
-                Anime: 
+                Finca: 
               </label>
               <input
                 className="form-control"
-                name="anime"
+                name="finca"
                 type="text"
                 onChange={this.handleChange}
-                value={this.state.form.anime}
+                value={this.state.form.finca}
               />
             </FormGroup>
           </ModalBody>
@@ -206,7 +207,7 @@ class App extends React.Component {
 
         <Modal isOpen={this.state.modalInsertar}>
           <ModalHeader>
-           <div><h3>Insertar Personaje</h3></div>
+           <div><h3>Insertar Registro</h3></div>
           </ModalHeader>
 
           <ModalBody>
@@ -225,11 +226,11 @@ class App extends React.Component {
             
             <FormGroup>
               <label>
-                Personaje: 
+                Recolector: 
               </label>
               <input
                 className="form-control"
-                name="personaje"
+                name="recolector"
                 type="text"
                 onChange={this.handleChange}
               />
@@ -237,11 +238,11 @@ class App extends React.Component {
             
             <FormGroup>
               <label>
-                Anime: 
+                Finca: 
               </label>
               <input
                 className="form-control"
-                name="anime"
+                name="finca"
                 type="text"
                 onChange={this.handleChange}
               />
