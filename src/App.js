@@ -1,5 +1,4 @@
 import React from "react";
-import logo from "./logo.svg";
 import "./App.css";
 import "bootstrap/dist/css/bootstrap.min.css";
 import {
@@ -11,28 +10,47 @@ import {
   ModalBody,
   FormGroup,
   ModalFooter,
+  Spinner,
+  Alert
 } from "reactstrap";
-
-// Datos actualizados con nombres coherentes
-const data = [
-  { id: 1, recolector: "Naruto", finca: "El Sapote" },
-  { id: 2, recolector: "Goku", finca: "Progreso" },
-  { id: 3, recolector: "Kenet", finca: "Peten" },
-  { id: 4, recolector: "juan", finca: "Quiche" },
-  { id: 5, recolector: "Mario", finca: "Jutiapa"},
-  { id: 6, recolector: "KEvin", finca: "Santa Rosa" },
-];
 
 class App extends React.Component {
   state = {
-    data: data,
+    data: [],
     modalActualizar: false,
     modalInsertar: false,
+    loading: false,
+    error: null,
     form: {
       id: "",
       recolector: "",
       finca: "",
     },
+  };
+
+  // Cuando el componente se monta, carga los datos
+  componentDidMount() {
+    this.obtenerRecolectores();
+  }
+
+  // Obtener los recolectores desde la API
+  obtenerRecolectores = () => {
+    this.setState({ loading: true, error: null });
+    
+    fetch('http://localhost:5000/api/recolectores')
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Error al cargar los datos');
+        }
+        return response.json();
+      })
+      .then(data => {
+        this.setState({ data, loading: false });
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        this.setState({ error: error.message, loading: false });
+      });
   };
 
   mostrarModalActualizar = (dato) => {
@@ -49,6 +67,11 @@ class App extends React.Component {
   mostrarModalInsertar = () => {
     this.setState({
       modalInsertar: true,
+      form: {
+        id: "",
+        recolector: "",
+        finca: "",
+      },
     });
   };
 
@@ -56,41 +79,97 @@ class App extends React.Component {
     this.setState({ modalInsertar: false });
   };
 
+  // Actualizar un registro a través de la API
   editar = (dato) => {
-    var contador = 0;
-    var arreglo = this.state.data;
-    arreglo.map((registro) => {
-      if (dato.id == registro.id) {
-        arreglo[contador].recolector = dato.recolector;
-        arreglo[contador].finca = dato.finca;
-      }
-      contador++;
-    });
-    this.setState({ data: arreglo, modalActualizar: false });
+    this.setState({ loading: true, error: null });
+    
+    fetch(`http://localhost:5000/api/recolectores/${dato.id}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        recolector: dato.recolector,
+        finca: dato.finca
+      }),
+    })
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Error al actualizar el registro');
+        }
+        return response.json();
+      })
+      .then(() => {
+        this.obtenerRecolectores();
+        this.setState({ modalActualizar: false });
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        this.setState({ error: error.message, loading: false });
+      });
   };
 
+  // Eliminar un registro a través de la API
   eliminar = (dato) => {
-    var opcion = window.confirm("Estás Seguro que deseas Eliminar el elemento "+dato.id);
-    if (opcion == true) {
-      var contador = 0;
-      var arreglo = this.state.data;
-      arreglo.map((registro) => {
-        if (dato.id == registro.id) {
-          arreglo.splice(contador, 1);
-        }
-        contador++;
-      });
-      this.setState({ data: arreglo, modalActualizar: false });
+    var opcion = window.confirm("¿Estás seguro que deseas eliminar el elemento " + dato.id + "?");
+    if (opcion) {
+      this.setState({ loading: true, error: null });
+      
+      fetch(`http://localhost:5000/api/recolectores/${dato.id}`, {
+        method: 'DELETE',
+      })
+        .then(response => {
+          if (!response.ok) {
+            throw new Error('Error al eliminar el registro');
+          }
+          return response.json();
+        })
+        .then(() => {
+          this.obtenerRecolectores();
+        })
+        .catch(error => {
+          console.error('Error:', error);
+          this.setState({ error: error.message, loading: false });
+        });
     }
   };
 
-  insertar= ()=>{
-    var valorNuevo= {...this.state.form};
-    valorNuevo.id=this.state.data.length+1;
-    var lista= this.state.data;
-    lista.push(valorNuevo);
-    this.setState({ modalInsertar: false, data: lista });
-  }
+  // Insertar un nuevo registro a través de la API
+  insertar = () => {
+    const { recolector, finca } = this.state.form;
+    
+    if (!recolector || !finca) {
+      alert('Por favor completa todos los campos');
+      return;
+    }
+    
+    this.setState({ loading: true, error: null });
+    
+    fetch('http://localhost:5000/api/recolectores', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        recolector: recolector,
+        finca: finca
+      }),
+    })
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Error al crear el registro');
+        }
+        return response.json();
+      })
+      .then(() => {
+        this.obtenerRecolectores();
+        this.setState({ modalInsertar: false });
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        this.setState({ error: error.message, loading: false });
+      });
+  };
 
   handleChange = (e) => {
     this.setState({
@@ -102,56 +181,66 @@ class App extends React.Component {
   };
 
   render() {
+    const { loading, error, data } = this.state;
     
     return (
       <>
         <Container>
-        <br />
-          <Button color="success" onClick={()=>this.mostrarModalInsertar()}>Crear</Button>
+          <br />
+          <Button color="success" onClick={this.mostrarModalInsertar}>Crear</Button>
           <br />
           <br />
-          <Table>
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>Recolector</th>
-                <th>Finca</th>
-                <th>Acción</th>
-              </tr>
-            </thead>
-
-            <tbody>
-              {this.state.data.map((dato) => (
-                <tr key={dato.id}>
-                  <td>{dato.id}</td>
-                  <td>{dato.recolector}</td>
-                  <td>{dato.finca}</td>
-                  <td>
-                    <Button
-                      color="primary"
-                      onClick={() => this.mostrarModalActualizar(dato)}
-                    >
-                      Editar
-                    </Button>{" "}
-                    <Button color="danger" onClick={()=> this.eliminar(dato)}>Eliminar</Button>
-                  </td>
+          
+          {error && <Alert color="danger">{error}</Alert>}
+          
+          {loading ? (
+            <div className="text-center">
+              <Spinner color="primary" />
+              <p>Cargando datos...</p>
+            </div>
+          ) : (
+            <Table>
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Recolector</th>
+                  <th>Finca</th>
+                  <th>Acción</th>
                 </tr>
-              ))}
-            </tbody>
-          </Table>
+              </thead>
+
+              <tbody>
+                {data.map((dato) => (
+                  <tr key={dato.id}>
+                    <td>{dato.id}</td>
+                    <td>{dato.recolector}</td>
+                    <td>{dato.finca}</td>
+                    <td>
+                      <Button
+                        color="primary"
+                        onClick={() => this.mostrarModalActualizar(dato)}
+                      >
+                        Editar
+                      </Button>{" "}
+                      <Button color="danger" onClick={() => this.eliminar(dato)}>Eliminar</Button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </Table>
+          )}
         </Container>
 
         <Modal isOpen={this.state.modalActualizar}>
           <ModalHeader>
-           <div><h3>Editar Registro</h3></div>
+            <div><h3>Editar Registro</h3></div>
           </ModalHeader>
 
           <ModalBody>
             <FormGroup>
               <label>
-               Id:
+                Id:
               </label>
-            
               <input
                 className="form-control"
                 readOnly
@@ -203,27 +292,12 @@ class App extends React.Component {
           </ModalFooter>
         </Modal>
 
-
-
         <Modal isOpen={this.state.modalInsertar}>
           <ModalHeader>
-           <div><h3>Insertar Registro</h3></div>
+            <div><h3>Insertar Registro</h3></div>
           </ModalHeader>
 
           <ModalBody>
-            <FormGroup>
-              <label>
-                Id: 
-              </label>
-              
-              <input
-                className="form-control"
-                readOnly
-                type="text"
-                value={this.state.data.length+1}
-              />
-            </FormGroup>
-            
             <FormGroup>
               <label>
                 Recolector: 
@@ -233,6 +307,7 @@ class App extends React.Component {
                 name="recolector"
                 type="text"
                 onChange={this.handleChange}
+                value={this.state.form.recolector}
               />
             </FormGroup>
             
@@ -245,6 +320,7 @@ class App extends React.Component {
                 name="finca"
                 type="text"
                 onChange={this.handleChange}
+                value={this.state.form.finca}
               />
             </FormGroup>
           </ModalBody>
@@ -252,13 +328,13 @@ class App extends React.Component {
           <ModalFooter>
             <Button
               color="primary"
-              onClick={() => this.insertar()}
+              onClick={this.insertar}
             >
               Insertar
             </Button>
             <Button
               className="btn btn-danger"
-              onClick={() => this.cerrarModalInsertar()}
+              onClick={this.cerrarModalInsertar}
             >
               Cancelar
             </Button>
@@ -268,4 +344,5 @@ class App extends React.Component {
     );
   }
 }
+
 export default App;
